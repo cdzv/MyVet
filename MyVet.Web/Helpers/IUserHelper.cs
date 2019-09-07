@@ -11,6 +11,8 @@ namespace MyVet.Web.Helpers
 
         Task<IdentityResult> AddUserAsync(User user, string password);
 
+        Task<bool> DeleteUserAsync(string email);
+
         Task CheckRoleAsync(string roleName);
 
         Task AddUserToRoleAsync(User user, string roleName);
@@ -20,6 +22,8 @@ namespace MyVet.Web.Helpers
         Task<SignInResult> LoginAsync(LoginViewModel model);
 
         Task LogoutAsync();
+
+        Task<IdentityResult> UpdateUserAsync(User user);
 
     }
 }
