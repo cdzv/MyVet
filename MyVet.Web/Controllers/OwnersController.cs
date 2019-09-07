@@ -38,6 +38,44 @@ namespace MyVet.Web.Controllers
             _imageHelper = imageHelper;
         }
 
+        public async Task<IActionResult> AddHistory(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var pet = await _dataContext.Pets.FindAsync(id.Value);
+            if (pet == null)
+            {
+                return NotFound();
+            }
+
+            var model = new HistoryViewModel
+            {
+                Date = DateTime.Now,
+                PetId = pet.Id,
+                ServiceTypes = _combosHelper.GetComboServiceTypes(),
+            };
+
+            return View(model);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> AddHistory(HistoryViewModel model)
+        {
+            if (ModelState.IsValid)
+            {
+                var history = await _converterHelper.ToHistoryAsync(model, true);
+                _dataContext.Histories.Add(history);
+                await _dataContext.SaveChangesAsync();
+                return RedirectToAction($"{nameof(DetailsPet)}/{model.PetId}");
+            }
+
+            return View(model);
+        }
+
+
         public async Task<IActionResult> AddPet(int? id)
         {
             if (id == null)
@@ -105,6 +143,40 @@ namespace MyVet.Web.Controllers
             var newUser = await _userHelper.GetUserByEmailAsync(view.Username);
             await _userHelper.AddUserToRoleAsync(newUser, "Customer");
             return newUser;
+        }
+
+
+        public async Task<IActionResult> EditHistory(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var history = await _dataContext.Histories
+                .Include(h => h.Pet)
+                .Include(h => h.ServiceType)
+                .FirstOrDefaultAsync(p => p.Id == id.Value);
+            if (history == null)
+            {
+                return NotFound();
+            }
+
+            return View(_converterHelper.ToHistoryViewModel(history));
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> EditHistory(HistoryViewModel model)
+        {
+            if (ModelState.IsValid)
+            {
+                var history = await _converterHelper.ToHistoryAsync(model, false);
+                _dataContext.Histories.Update(history);
+                await _dataContext.SaveChangesAsync();
+                return RedirectToAction($"{nameof(DetailsPet)}/{model.PetId}");
+            }
+
+            return View(model);
         }
 
 
